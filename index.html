@@ -514,7 +514,7 @@
         <!-- LEFT: DANH SÁCH -->
         <div style="background:#f8fafc; padding:15px; border-radius:12px;">
             <input type="text" placeholder="🔍 Tìm hồ sơ..." 
-                   onkeyup="searchDanVan(this.value)"
+                   onkeyup="searchDanVan(this.value, this)"
                    style="width:100%; padding:8px; border-radius:8px; border:1px solid #ccc; margin-bottom:10px;">
 
             <div class="dv-file" onclick="openDanVan(this,'12oePt13CxZSeViMhzkPQ2kehYkSpSZa3')">📄 Kế hoạch BDTX 2025-2026</div>
@@ -529,13 +529,13 @@
         <!-- RIGHT: VIEW -->
         <div>
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <h4 id="dv-title">Chọn hồ sơ để xem</h4>
-                <a id="dv-download" class="btn btn-download" target="_blank">
+                <h4 class="dv-title">Chọn hồ sơ để xem</h4>
+                <a class="dv-download" class="btn btn-download" target="_blank">
                     <i class="fa fa-download"></i> Tải file
                 </a>
             </div>
 
-            <iframe id="dv-viewer" class="pdf-viewer"></iframe>
+            <iframe class="dv-viewer" class="pdf-viewer"></iframe>
         </div>
 
     </div>
@@ -859,47 +859,64 @@
         }
     }
     
-    function toggleGroup(el){
-        let group = el.parentElement;
-        group.classList.toggle('active');
-    }
-    
-    function loadPDFItem(btn, fileId){
-        let container = btn.closest('.btn-group').nextElementSibling;
-        let iframe = container.querySelector(".pdf-viewer");
-        let link = btn.nextElementSibling;
-        
-        iframe.style.opacity = "0.5";
-        iframe.src = "https://drive.google.com/file/d/" + fileId + "/preview";
-        link.href = "https://drive.google.com/uc?export=download&id=" + fileId;
-        
-        iframe.onload = function() {
-            iframe.style.opacity = "1";
-        };
-    }
-
-function openDanVan(el, fileId){
-    document.querySelectorAll('.dv-file').forEach(f=>f.classList.remove('active'));
-    el.classList.add('active');
-
-    document.getElementById('dv-title').innerText = el.innerText;
-
-    document.getElementById('dv-viewer').src =
-        "https://drive.google.com/file/d/" + fileId + "/preview";
-
-    document.getElementById('dv-download').href =
-        "https://drive.google.com/uc?export=download&id=" + fileId;
+<script>
+// Hàm chuyển đổi đóng/mở nhóm menu
+function toggleGroup(el) {
+    el.parentElement.classList.toggle('active');
 }
 
-function searchDanVan(keyword){
-    let list = document.querySelectorAll('.dv-file');
-    keyword = keyword.toLowerCase();
+// Hàm chuyển đổi giữa các Tab chính
+function showTab(id, el) {
+    // Ẩn tất cả các nội dung tab
+    document.querySelectorAll('.content-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    // Bỏ active ở tất cả menu side
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Hiển thị tab được chọn
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+}
 
-    list.forEach(i=>{
-        i.style.display = i.innerText.toLowerCase().includes(keyword) ? "block" : "none";
+// HÀM QUAN TRỌNG: Sửa lỗi hiển thị hồ sơ
+function openDanVan(el, fileId) {
+    // 1. Tìm container cha (tab hiện tại) của phần tử vừa click
+    const parentTab = el.closest('.content-item');
+    
+    // 2. Xóa trạng thái active của các file cũ trong tab này và active file mới
+    parentTab.querySelectorAll('.dv-file').forEach(f => f.classList.remove('active'));
+    el.classList.add('active');
+
+    // 3. Tìm các thành phần hiển thị BÊN TRONG tab hiện tại bằng Class
+    const titleBox = parentTab.querySelector('.dv-title');
+    const viewerBox = parentTab.querySelector('.pdf-viewer'); // hoặc .dv-viewer tùy bạn đặt
+    const downloadBtn = parentTab.querySelector('.btn-download');
+
+    // 4. Cập nhật nội dung tương ứng
+    if(titleBox) titleBox.innerText = el.innerText;
+    if(viewerBox) viewerBox.src = "https://drive.google.com/file/d/" + fileId + "/preview";
+    if(downloadBtn) {
+        downloadBtn.href = "https://drive.google.com/uc?export=download&id=" + fileId;
+        downloadBtn.style.display = "inline-flex"; // Hiện nút tải khi đã chọn file
+    }
+}
+
+// Hàm tìm kiếm hồ sơ trong từng tab
+function searchDanVan(searchValue, inputEl) {
+    const filter = searchValue.toUpperCase();
+    const parentTab = inputEl.closest('.content-item');
+    const files = parentTab.querySelectorAll('.dv-file');
+
+    files.forEach(file => {
+        const text = file.textContent || file.innerText;
+        file.style.display = text.toUpperCase().indexOf(filter) > -1 ? "" : "none";
     });
 }
 </script>
+
 
 </body>
 </html>
